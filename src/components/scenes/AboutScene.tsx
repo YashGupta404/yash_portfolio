@@ -1,94 +1,136 @@
 import { motion } from 'framer-motion';
 
+// This component renders content as if projected on a cinema screen
+// with retro film aesthetics
+
 const AboutScene = () => {
   return (
     <motion.div
-      className="min-h-screen flex items-center justify-center px-8 py-20"
+      className="w-full h-full flex items-center justify-center p-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.6 }}
+      transition={{ duration: 0.8 }}
     >
-      <div className="max-w-5xl w-full">
-        {/* Scene title */}
+      <div className="max-w-3xl text-center">
+        {/* Silent film style title card */}
         <motion.div
-          className="text-center mb-16"
-          initial={{ y: 30, opacity: 0 }}
+          initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
+          transition={{ delay: 0.3 }}
         >
-          <p className="font-film text-muted-foreground text-lg italic mb-4">Scene I</p>
-          <h1 className="font-cinema text-5xl md:text-7xl text-theater-gold text-shadow-gold tracking-wide mb-4">
+          <p 
+            className="font-film italic text-sm tracking-[0.3em] mb-4"
+            style={{ color: 'hsl(35, 25%, 35%)' }}
+          >
+            ~ Scene I ~
+          </p>
+          <h1 
+            className="font-cinema text-4xl md:text-6xl mb-6 tracking-wide"
+            style={{
+              color: 'hsl(25, 20%, 15%)',
+              textShadow: '2px 2px 4px hsla(25, 20%, 30%, 0.3)',
+            }}
+          >
             THE PROTAGONIST
           </h1>
-          <div className="w-32 h-0.5 bg-theater-gold mx-auto opacity-60" />
+          <div 
+            className="w-40 h-0.5 mx-auto mb-8"
+            style={{ background: 'linear-gradient(90deg, transparent, hsl(35, 30%, 40%), transparent)' }}
+          />
         </motion.div>
 
-        {/* Content in film frame style */}
+        {/* Portrait frame */}
         <motion.div
-          className="relative mx-auto max-w-3xl"
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
+          className="mx-auto mb-8"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.5 }}
         >
-          <div className="film-frame p-8 md:p-12">
-            <div className="relative z-10 text-center">
-              <motion.div
-                className="w-32 h-32 mx-auto mb-8 rounded-full overflow-hidden"
-                style={{
-                  border: '3px solid hsl(45, 60%, 45%)',
-                  boxShadow: '0 0 30px hsl(45, 80%, 50% / 0.3)',
-                }}
-                whileHover={{ scale: 1.05 }}
-              >
-                <div className="w-full h-full bg-gradient-to-br from-secondary to-muted flex items-center justify-center">
-                  <span className="font-cinema text-4xl text-theater-gold">JD</span>
-                </div>
-              </motion.div>
-
-              <h2 className="font-cinema text-3xl text-film-cream mb-4">
-                John Developer
-              </h2>
-              <p className="font-film text-xl text-muted-foreground italic mb-8">
-                Creative Technologist & Digital Craftsman
-              </p>
-
-              <div className="space-y-4 text-film-sepia font-film text-lg leading-relaxed">
-                <p>
-                  In the grand theater of technology, I am both the director and the performer. 
-                  With a passion for crafting immersive digital experiences, I blend creativity 
-                  with technical precision to bring visions to life.
-                </p>
-                <p>
-                  My journey through the digital realm spans over a decade, during which I have 
-                  mastered the art of transforming complex ideas into elegant, user-centric solutions.
-                </p>
-              </div>
-
-              {/* Stats as film frames */}
-              <div className="grid grid-cols-3 gap-4 mt-12">
-                {[
-                  { label: 'Years Experience', value: '10+' },
-                  { label: 'Projects Delivered', value: '150+' },
-                  { label: 'Happy Clients', value: '50+' },
-                ].map((stat, index) => (
-                  <motion.div
-                    key={stat.label}
-                    className="p-4 rounded bg-muted/50"
-                    style={{
-                      border: '1px solid hsl(40, 25%, 20%)',
-                    }}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 + index * 0.1, duration: 0.4 }}
-                  >
-                    <p className="font-cinema text-2xl text-theater-gold mb-1">{stat.value}</p>
-                    <p className="font-film text-sm text-muted-foreground">{stat.label}</p>
-                  </motion.div>
-                ))}
-              </div>
+          <div 
+            className="w-32 h-32 mx-auto rounded-full overflow-hidden"
+            style={{
+              border: '4px solid hsl(35, 30%, 35%)',
+              boxShadow: '0 4px 20px hsla(25, 20%, 20%, 0.4)',
+            }}
+          >
+            <div 
+              className="w-full h-full flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, hsl(35, 20%, 75%) 0%, hsl(30, 15%, 65%) 100%)' }}
+            >
+              <span className="font-cinema text-3xl" style={{ color: 'hsl(25, 20%, 25%)' }}>JD</span>
             </div>
           </div>
+        </motion.div>
+
+        {/* Info in retro card style */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.7 }}
+        >
+          <h2 
+            className="font-cinema text-2xl mb-2"
+            style={{ color: 'hsl(25, 20%, 20%)' }}
+          >
+            John Developer
+          </h2>
+          <p 
+            className="font-film italic text-lg mb-6"
+            style={{ color: 'hsl(30, 15%, 40%)' }}
+          >
+            Creative Technologist & Digital Craftsman
+          </p>
+
+          <div 
+            className="p-6 rounded mx-auto max-w-xl"
+            style={{
+              background: 'hsla(35, 20%, 88%, 0.5)',
+              border: '2px solid hsl(35, 25%, 75%)',
+            }}
+          >
+            <p 
+              className="font-film text-base leading-relaxed mb-4"
+              style={{ color: 'hsl(25, 15%, 25%)' }}
+            >
+              In the grand theater of technology, I am both the director and the performer.
+              With a passion for crafting immersive digital experiences, I blend creativity
+              with technical precision.
+            </p>
+            <p 
+              className="font-film text-base leading-relaxed"
+              style={{ color: 'hsl(25, 15%, 25%)' }}
+            >
+              My journey spans over a decade, transforming complex ideas into elegant,
+              user-centric solutions that leave lasting impressions.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Stats as vintage labels */}
+        <motion.div
+          className="flex justify-center gap-6 mt-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+        >
+          {[
+            { value: '10+', label: 'Years' },
+            { value: '150+', label: 'Projects' },
+            { value: '50+', label: 'Clients' },
+          ].map((stat, i) => (
+            <div 
+              key={stat.label}
+              className="px-4 py-2 text-center"
+              style={{
+                border: '1px solid hsl(35, 25%, 65%)',
+                borderRadius: '2px',
+              }}
+            >
+              <p className="font-cinema text-xl" style={{ color: 'hsl(25, 20%, 20%)' }}>{stat.value}</p>
+              <p className="font-film text-xs" style={{ color: 'hsl(30, 15%, 45%)' }}>{stat.label}</p>
+            </div>
+          ))}
         </motion.div>
       </div>
     </motion.div>
