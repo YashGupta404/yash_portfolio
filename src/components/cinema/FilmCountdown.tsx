@@ -7,98 +7,131 @@ interface FilmCountdownProps {
 
 const FilmCountdown = ({ onComplete }: FilmCountdownProps) => {
   const [count, setCount] = useState(3);
-  const [isComplete, setIsComplete] = useState(false);
+  const [showFilmBurn, setShowFilmBurn] = useState(false);
 
   useEffect(() => {
     if (count > 0) {
-      const timer = setTimeout(() => {
-        setCount(count - 1);
-      }, 1000);
+      const timer = setTimeout(() => setCount(count - 1), 1000);
       return () => clearTimeout(timer);
-    } else if (count === 0 && !isComplete) {
-      setIsComplete(true);
-      setTimeout(onComplete, 500);
+    } else {
+      setShowFilmBurn(true);
+      setTimeout(onComplete, 800);
     }
-  }, [count, isComplete, onComplete]);
+  }, [count, onComplete]);
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-background z-40">
-      {/* Film frame border */}
+    <div 
+      className="absolute inset-0 flex items-center justify-center z-50 overflow-hidden"
+      style={{
+        background: 'hsl(35, 15%, 12%)',
+      }}
+    >
+      {/* Aged film texture */}
       <div 
-        className="absolute inset-8 border-4 rounded"
+        className="absolute inset-0 opacity-30"
         style={{
-          borderColor: 'hsl(40, 25%, 25%)',
-          boxShadow: 'inset 0 0 50px rgba(0,0,0,0.5)',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          mixBlendMode: 'overlay',
         }}
       />
 
-      {/* Film sprocket holes - left */}
-      <div className="absolute left-0 top-0 bottom-0 w-12 flex flex-col justify-around py-8">
-        {Array.from({ length: 12 }).map((_, i) => (
+      {/* Film frame border */}
+      <div 
+        className="absolute"
+        style={{
+          inset: '5%',
+          border: '4px solid hsl(35, 20%, 20%)',
+          borderRadius: '4px',
+          boxShadow: 'inset 0 0 80px rgba(0,0,0,0.6)',
+        }}
+      />
+
+      {/* Sprocket holes - left */}
+      <div className="absolute left-[2%] top-0 bottom-0 w-10 flex flex-col justify-around py-4">
+        {Array.from({ length: 16 }).map((_, i) => (
           <div 
             key={`left-${i}`}
-            className="w-6 h-4 bg-background rounded-sm mx-auto"
+            className="w-5 h-3 rounded-sm mx-auto"
             style={{
-              boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)',
-              border: '1px solid hsl(40, 20%, 20%)',
+              background: 'hsl(0, 0%, 5%)',
+              border: '1px solid hsl(35, 15%, 18%)',
+              boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)',
             }}
           />
         ))}
       </div>
 
-      {/* Film sprocket holes - right */}
-      <div className="absolute right-0 top-0 bottom-0 w-12 flex flex-col justify-around py-8">
-        {Array.from({ length: 12 }).map((_, i) => (
+      {/* Sprocket holes - right */}
+      <div className="absolute right-[2%] top-0 bottom-0 w-10 flex flex-col justify-around py-4">
+        {Array.from({ length: 16 }).map((_, i) => (
           <div 
             key={`right-${i}`}
-            className="w-6 h-4 bg-background rounded-sm mx-auto"
+            className="w-5 h-3 rounded-sm mx-auto"
             style={{
-              boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)',
-              border: '1px solid hsl(40, 20%, 20%)',
+              background: 'hsl(0, 0%, 5%)',
+              border: '1px solid hsl(35, 15%, 18%)',
+              boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)',
             }}
           />
         ))}
       </div>
 
-      {/* Countdown circle */}
+      {/* Center countdown area */}
       <div className="relative">
-        {/* Outer rotating ring */}
+        {/* Rotating outer ring with tick marks */}
         <motion.div
-          className="absolute inset-0 w-64 h-64 -m-32 rounded-full border-4"
+          className="absolute -inset-8 rounded-full"
           style={{
-            borderColor: 'hsl(40, 25%, 30%)',
-            borderTopColor: 'hsl(45, 80%, 50%)',
+            border: '3px solid hsl(35, 25%, 25%)',
           }}
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        />
+          animate={{ rotate: -360 }}
+          transition={{ duration: 3, ease: "linear" }}
+        >
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-0.5 h-3"
+              style={{
+                background: 'hsl(35, 30%, 35%)',
+                top: '50%',
+                left: '50%',
+                transformOrigin: '0 0',
+                transform: `rotate(${i * 30}deg) translateY(-85px)`,
+              }}
+            />
+          ))}
+        </motion.div>
 
-        {/* Inner circle */}
+        {/* Main countdown circle */}
         <div 
-          className="w-48 h-48 rounded-full flex items-center justify-center"
+          className="w-40 h-40 rounded-full flex items-center justify-center relative"
           style={{
-            background: 'radial-gradient(circle, hsl(40, 20%, 15%) 0%, hsl(0, 0%, 5%) 100%)',
-            border: '3px solid hsl(40, 25%, 25%)',
-            boxShadow: 'inset 0 0 30px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5)',
+            background: 'radial-gradient(circle, hsl(35, 12%, 18%) 0%, hsl(25, 10%, 10%) 100%)',
+            border: '4px solid hsl(35, 20%, 22%)',
+            boxShadow: 'inset 0 0 40px rgba(0,0,0,0.7), 0 0 20px rgba(0,0,0,0.5)',
           }}
         >
           {/* Crosshairs */}
-          <div className="absolute w-full h-0.5 bg-muted-foreground/30" />
-          <div className="absolute h-full w-0.5 bg-muted-foreground/30" />
+          <div className="absolute w-full h-0.5" style={{ background: 'hsl(35, 20%, 30%)' }} />
+          <div className="absolute h-full w-0.5" style={{ background: 'hsl(35, 20%, 30%)' }} />
+          
+          {/* Center dot */}
+          <div className="absolute w-2 h-2 rounded-full" style={{ background: 'hsl(35, 30%, 40%)' }} />
 
           {/* Number */}
           <AnimatePresence mode="wait">
             {count > 0 && (
               <motion.span
                 key={count}
-                className="font-cinema text-8xl text-theater-gold"
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 1.5, opacity: 0 }}
-                transition={{ duration: 0.3 }}
+                className="font-cinema text-7xl relative z-10"
                 style={{
-                  textShadow: '0 0 20px hsl(45, 80%, 50% / 0.5), 0 4px 8px rgba(0,0,0,0.8)',
+                  color: 'hsl(40, 50%, 80%)',
+                  textShadow: '0 0 20px hsla(40, 60%, 70%, 0.5), 2px 2px 8px rgba(0,0,0,0.8)',
                 }}
+                initial={{ scale: 0.3, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 1.8, opacity: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
               >
                 {count}
               </motion.span>
@@ -106,45 +139,51 @@ const FilmCountdown = ({ onComplete }: FilmCountdownProps) => {
           </AnimatePresence>
         </div>
 
-        {/* Tick marks around circle */}
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-4 bg-muted-foreground/50"
-            style={{
-              top: '50%',
-              left: '50%',
-              transformOrigin: '50% -80px',
-              transform: `rotate(${i * 30}deg) translateY(-80px)`,
-            }}
-          />
-        ))}
+        {/* Sweep hand */}
+        <motion.div
+          className="absolute top-1/2 left-1/2 w-1 origin-bottom"
+          style={{
+            height: '70px',
+            background: 'linear-gradient(180deg, hsl(45, 80%, 50%) 0%, hsl(40, 70%, 40%) 100%)',
+            marginLeft: '-2px',
+            marginTop: '-70px',
+            boxShadow: '0 0 8px hsla(45, 80%, 50%, 0.5)',
+          }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        />
       </div>
 
-      {/* Film scratches effect */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-30"
-        style={{
-          background: `
-            linear-gradient(90deg, transparent 0%, transparent 45%, rgba(255,255,255,0.1) 45.5%, transparent 46%, transparent 100%),
-            linear-gradient(90deg, transparent 0%, transparent 72%, rgba(255,255,255,0.05) 72.5%, transparent 73%, transparent 100%)
-          `,
-          animation: 'film-scratch 0.2s linear infinite',
-        }}
-      />
-
-      {/* Dust particles */}
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 rounded-full bg-film-sepia/40"
-          style={{
-            left: `${Math.random() * 100}%`,
-            animation: `dust-float ${10 + Math.random() * 10}s linear infinite`,
-            animationDelay: `${Math.random() * 5}s`,
-          }}
+      {/* Film scratches */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <motion.div 
+          className="absolute h-full w-px bg-white/10"
+          style={{ left: '23%' }}
+          animate={{ y: ['-100%', '100%'] }}
+          transition={{ duration: 0.2, repeat: Infinity, ease: "linear" }}
         />
-      ))}
+        <motion.div 
+          className="absolute h-full w-px bg-white/5"
+          style={{ left: '67%' }}
+          animate={{ y: ['100%', '-100%'] }}
+          transition={{ duration: 0.15, repeat: Infinity, ease: "linear" }}
+        />
+      </div>
+
+      {/* Film burn effect on transition */}
+      <AnimatePresence>
+        {showFilmBurn && (
+          <motion.div
+            className="absolute inset-0"
+            style={{
+              background: 'radial-gradient(ellipse at center, #fff 0%, #ffeedd 30%, #ff8844 60%, #000 100%)',
+            }}
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 2 }}
+            transition={{ duration: 0.6 }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

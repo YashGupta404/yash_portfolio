@@ -6,7 +6,6 @@ import CinemaNavigation from './cinema/CinemaNavigation';
 import SceneTransition from './cinema/SceneTransition';
 import FilmGrain from './cinema/FilmGrain';
 import Vignette from './cinema/Vignette';
-import Scanlines from './cinema/Scanlines';
 import AboutScene from './scenes/AboutScene';
 import ProjectsScene from './scenes/ProjectsScene';
 import SkillsScene from './scenes/SkillsScene';
@@ -32,10 +31,6 @@ const CinemaPortfolio = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [handleMouseMove]);
 
-  const handleCurtainComplete = () => {
-    setShowCurtains(false);
-  };
-
   const handleSceneChange = (index: number) => {
     if (index === currentScene || isTransitioning) return;
     setPendingScene(index);
@@ -52,67 +47,51 @@ const CinemaPortfolio = () => {
 
   const renderScene = () => {
     switch (currentScene) {
-      case 0:
-        return <AboutScene key="about" />;
-      case 1:
-        return <ProjectsScene key="projects" />;
-      case 2:
-        return <SkillsScene key="skills" />;
-      case 3:
-        return <ContactScene key="contact" />;
-      default:
-        return <AboutScene key="about" />;
+      case 0: return <AboutScene key="about" />;
+      case 1: return <ProjectsScene key="projects" />;
+      case 2: return <SkillsScene key="skills" />;
+      case 3: return <ContactScene key="contact" />;
+      default: return <AboutScene key="about" />;
     }
   };
 
   return (
     <div className="relative w-full h-screen bg-background overflow-hidden">
-      {/* 3D Cinema Scene - always rendered in background */}
-      {!showCurtains && (
-        <CinemaScene mousePosition={mousePosition} />
-      )}
+      {/* 3D Cinema Scene */}
+      {!showCurtains && <CinemaScene mousePosition={mousePosition} />}
 
-      {/* Curtain Opening Sequence */}
-      {showCurtains && (
-        <CurtainOpening onComplete={handleCurtainComplete} />
-      )}
+      {/* Curtain Opening */}
+      {showCurtains && <CurtainOpening onComplete={() => setShowCurtains(false)} />}
 
-      {/* Main Content */}
+      {/* Content displayed ON the screen */}
       {!showCurtains && (
         <>
-          {/* Scene Content */}
-          <div className="relative z-10 w-full h-full overflow-y-auto">
-            <div 
-              className="min-h-screen projector-flicker"
-              style={{
-                background: 'radial-gradient(ellipse at center top, hsla(45, 30%, 95%, 0.03) 0%, transparent 50%)',
-              }}
-            >
-              <AnimatePresence mode="wait">
-                {renderScene()}
-              </AnimatePresence>
-            </div>
+          {/* Screen content area - positioned to overlay the 3D screen */}
+          <div 
+            className="fixed z-10 overflow-hidden projector-flicker"
+            style={{
+              left: '10%',
+              right: '10%',
+              top: '12%',
+              bottom: '22%',
+              background: 'linear-gradient(180deg, hsl(40, 35%, 92%) 0%, hsl(35, 30%, 88%) 100%)',
+              boxShadow: 'inset 0 0 60px hsla(30, 20%, 50%, 0.2)',
+              borderRadius: '4px',
+            }}
+          >
+            <AnimatePresence mode="wait">
+              {renderScene()}
+            </AnimatePresence>
           </div>
 
-          {/* Navigation */}
-          <CinemaNavigation
-            currentScene={currentScene}
-            scenes={scenes}
-            onNavigate={handleSceneChange}
-          />
-
-          {/* Scene Transition */}
-          <SceneTransition
-            isTransitioning={isTransitioning}
-            onTransitionComplete={handleTransitionComplete}
-          />
+          <CinemaNavigation currentScene={currentScene} scenes={scenes} onNavigate={handleSceneChange} />
+          <SceneTransition isTransitioning={isTransitioning} onTransitionComplete={handleTransitionComplete} />
         </>
       )}
 
-      {/* Post-processing overlays */}
+      {/* Overlays */}
       <FilmGrain />
       <Vignette />
-      <Scanlines />
     </div>
   );
 };
