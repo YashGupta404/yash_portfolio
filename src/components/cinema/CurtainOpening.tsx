@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { gsap } from 'gsap';
 import FilmCountdown from './FilmCountdown';
 
@@ -6,272 +6,429 @@ interface CurtainOpeningProps {
   onComplete: () => void;
 }
 
-// Curtain fold component with physics-like behavior
-const CurtainFold = ({ 
-  index, 
-  isLeft, 
+// ============================================================================
+// CURTAIN FOLD - Simple elegant red velvet
+// ============================================================================
+
+const CurtainFold = ({
+  index,
+  totalFolds,
+  isLeft,
   isOpening,
-  delay 
-}: { 
-  index: number; 
-  isLeft: boolean; 
+  baseDelay,
+}: {
+  index: number;
+  totalFolds: number;
+  isLeft: boolean;
   isOpening: boolean;
-  delay: number;
+  baseDelay: number;
 }) => {
   const foldRef = useRef<HTMLDivElement>(null);
-  
+
+  const foldWidth = 100 / totalFolds;
+  const foldPosition = index * foldWidth;
+  const zIndex = totalFolds - index;
+
   useEffect(() => {
-    if (!foldRef.current || !isOpening) return;
-    
-    // Each fold moves with spring physics - outer folds lag behind
-    const baseDelay = delay + index * 0.08;
-    const distance = isLeft ? -120 : 120;
-    
-    gsap.to(foldRef.current, {
-      x: distance + (index * (isLeft ? -15 : 15)),
-      scaleX: 0.3 + (index * 0.05),
-      duration: 2.5 + (index * 0.15),
-      delay: baseDelay,
-      ease: "elastic.out(0.4, 0.3)",
-    });
-    
-    // Secondary wave motion
-    gsap.to(foldRef.current, {
-      rotateY: isLeft ? -25 : 25,
-      duration: 1.5,
-      delay: baseDelay + 0.3,
+    const fold = foldRef.current;
+    if (!fold) return;
+
+    gsap.killTweensOf(fold);
+
+    if (!isOpening) {
+      // Gentle sway
+      gsap.to(fold, {
+        x: Math.sin(index * 0.6) * 2,
+        duration: 2.5 + index * 0.15,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+      });
+      return;
+    }
+
+    // Opening animation
+    const delay = baseDelay + index * 0.05;
+    const distance = isLeft ? -(110 + index * 12) : (110 + index * 12);
+
+    gsap.to(fold, {
+      x: distance,
+      scaleX: 0.35 + index * 0.03,
+      rotateY: isLeft ? -15 - index * 1.5 : 15 + index * 1.5,
+      duration: 2.2 + index * 0.08,
+      delay,
       ease: "power2.out",
     });
-  }, [isOpening, index, isLeft, delay]);
 
-  const baseColor = 140 + index * 8;
-  
+  }, [isOpening, index, isLeft, totalFolds, baseDelay]);
+
+  const baseLight = 13 + index * 1.5;
+  const gradientDir = isLeft ? '90deg' : '270deg';
+  const gradient = `linear-gradient(${gradientDir}, 
+    hsl(0, 72%, ${baseLight - 3}%) 0%, 
+    hsl(0, 75%, ${baseLight}%) 30%, 
+    hsl(0, 78%, ${baseLight + 2}%) 50%, 
+    hsl(0, 75%, ${baseLight}%) 70%, 
+    hsl(0, 68%, ${baseLight - 4}%) 100%
+  )`;
+
   return (
     <div
       ref={foldRef}
-      className="absolute top-0 bottom-0 origin-center"
+      className="absolute top-0 bottom-0"
       style={{
-        width: '15%',
-        left: isLeft ? `${index * 10}%` : 'auto',
-        right: !isLeft ? `${index * 10}%` : 'auto',
-        background: `linear-gradient(${isLeft ? '90deg' : '270deg'}, 
-          hsl(0, 70%, ${baseColor * 0.11}%) 0%,
-          hsl(0, 72%, ${baseColor * 0.14}%) 30%,
-          hsl(0, 68%, ${baseColor * 0.12}%) 70%,
-          hsl(0, 70%, ${baseColor * 0.10}%) 100%
-        )`,
-        boxShadow: `${isLeft ? '5px' : '-5px'} 0 15px rgba(0,0,0,0.3)`,
-        transform: 'perspective(1000px) rotateY(0deg)',
+        width: `${foldWidth + 0.5}%`,
+        [isLeft ? 'left' : 'right']: `${foldPosition}%`,
+        background: gradient,
+        boxShadow: `${isLeft ? '3px' : '-3px'} 0 12px rgba(0,0,0,0.35)`,
         transformStyle: 'preserve-3d',
-        zIndex: 10 - index,
+        zIndex,
       }}
     >
       {/* Velvet texture */}
-      <div 
-        className="absolute inset-0 opacity-20"
+      <div
+        className="absolute inset-0 opacity-12"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          mixBlendMode: 'overlay',
         }}
       />
-      {/* Highlight on fold edge */}
-      <div 
-        className="absolute top-0 bottom-0 w-1"
+
+      {/* Shadow line */}
+      <div
+        className="absolute top-0 bottom-0"
         style={{
+          width: '1px',
           [isLeft ? 'right' : 'left']: 0,
-          background: `linear-gradient(180deg, 
-            transparent 0%, 
-            rgba(255,200,150,0.1) 30%,
-            rgba(255,200,150,0.15) 50%,
-            rgba(255,200,150,0.1) 70%,
-            transparent 100%
-          )`,
+          background: 'rgba(0,0,0,0.25)',
         }}
       />
     </div>
   );
 };
 
+// ============================================================================
+// GOLD FRINGE
+// ============================================================================
+
+const GoldFringe = ({ isLeft, isOpening }: { isLeft: boolean; isOpening: boolean }) => {
+  const fringeRef = useRef<HTMLDivElement>(null);
+
+  // Memoize fringe heights to prevent flickering on re-renders
+  const fringeHeights = useMemo(() =>
+    Array.from({ length: 35 }, () => 6 + Math.random() * 4),
+    []
+  );
+
+  useEffect(() => {
+    if (!fringeRef.current || !isOpening) return;
+
+    gsap.to(fringeRef.current, {
+      x: isLeft ? '-95%' : '95%',
+      duration: 2.5,
+      ease: "power2.inOut",
+    });
+  }, [isOpening, isLeft]);
+
+  return (
+    <div
+      ref={fringeRef}
+      className="absolute bottom-0 h-10"
+      style={{
+        width: '55%',
+        [isLeft ? 'left' : 'right']: 0,
+      }}
+    >
+      <div
+        className="absolute top-0 left-0 right-0 h-2.5"
+        style={{
+          background: 'linear-gradient(180deg, #c9a54d 0%, #a67c32 60%, #8b6528 100%)',
+          boxShadow: '0 2px 5px rgba(0,0,0,0.4)',
+        }}
+      />
+      <div className="absolute top-2.5 left-0 right-0 flex justify-center">
+        {fringeHeights.map((height, i) => (
+          <div
+            key={i}
+            className="mx-0.5"
+            style={{
+              width: '2.5px',
+              height: `${height}px`,
+              background: 'linear-gradient(180deg, #c9a54d 0%, #8b6528 100%)',
+              borderRadius: '0 0 40% 40%',
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// MAIN CURTAIN OPENING
+// ============================================================================
+
 const CurtainOpening = ({ onComplete }: CurtainOpeningProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const leftCurtainRef = useRef<HTMLDivElement>(null);
   const rightCurtainRef = useRef<HTMLDivElement>(null);
+
   const [showCountdown, setShowCountdown] = useState(false);
   const [showEnterButton, setShowEnterButton] = useState(true);
   const [isOpening, setIsOpening] = useState(false);
 
-  const startOpening = () => {
-    setShowEnterButton(false);
-    
-    // Brief anticipation before opening
-    gsap.to([leftCurtainRef.current, rightCurtainRef.current], {
-      scaleX: 1.02,
-      duration: 0.4,
-      ease: "power2.in",
-      onComplete: () => {
-        setIsOpening(true);
-        
-        // Main curtain body movement
-        gsap.to(leftCurtainRef.current, {
-          xPercent: -85,
-          duration: 3,
-          ease: "power3.inOut",
-        });
-        
-        gsap.to(rightCurtainRef.current, {
-          xPercent: 85,
-          duration: 3,
-          ease: "power3.inOut",
-          onComplete: () => {
-            setTimeout(() => setShowCountdown(true), 300);
-          }
-        });
-      }
-    });
-  };
+  const numFolds = 7;
 
-  const handleCountdownComplete = () => {
+  const startOpening = useCallback(() => {
+    setShowEnterButton(false);
+
+    setTimeout(() => setIsOpening(true), 150);
+
+    const tl = gsap.timeline();
+
+    tl.to(leftCurtainRef.current, {
+      xPercent: -95,
+      duration: 2.5,
+      delay: 0.2,
+      ease: "power2.inOut",
+    }, 0);
+
+    tl.to(rightCurtainRef.current, {
+      xPercent: 95,
+      duration: 2.5,
+      delay: 0.2,
+      ease: "power2.inOut",
+      onComplete: () => setTimeout(() => setShowCountdown(true), 300),
+    }, 0);
+
+  }, []);
+
+  const handleCountdownComplete = useCallback(() => {
     gsap.to(containerRef.current, {
       opacity: 0,
-      duration: 1,
+      duration: 0.8,
       ease: "power2.inOut",
       onComplete: () => onComplete(),
     });
-  };
+  }, [onComplete]);
 
   return (
     <div ref={containerRef} className="fixed inset-0 z-[100] overflow-hidden">
-      {/* Dark theater background */}
-      <div 
+      {/* Cinema theater background - warm dark tones, not black */}
+      <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse at center, hsl(0, 0%, 8%) 0%, hsl(0, 0%, 2%) 100%)',
+          background: 'linear-gradient(180deg, #1a0f0a 0%, #0f0806 50%, #1a0f0a 100%)',
         }}
       />
-      
-      {/* Faint screen glow */}
+
+      {/* Subtle screen glow in center */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div 
-          className="w-[60%] h-[50%] rounded animate-pulse-slow"
+        <div
+          className="w-[70%] h-[60%] opacity-[0.04]"
           style={{
-            background: 'radial-gradient(ellipse at center, hsla(45, 50%, 95%, 0.04) 0%, transparent 60%)',
+            background: 'radial-gradient(ellipse, #fff8e0 0%, transparent 70%)',
+            filter: 'blur(40px)',
           }}
         />
       </div>
 
-      {/* Left curtain with folds */}
+      {/* Left Side Dust Particles */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-[15%] pointer-events-none"
+        style={{ zIndex: 45 }}
+      >
+        {/* Dust specks layer */}
+        <div
+          className="absolute inset-0 opacity-25"
+          style={{
+            background: `
+              radial-gradient(1px 1px at 10% 15%, rgba(255,250,220,0.6), transparent),
+              radial-gradient(1.5px 1.5px at 25% 30%, rgba(255,240,200,0.5), transparent),
+              radial-gradient(1px 1px at 5% 45%, rgba(255,255,240,0.5), transparent),
+              radial-gradient(1.5px 1.5px at 35% 55%, rgba(255,245,210,0.4), transparent),
+              radial-gradient(1px 1px at 15% 65%, rgba(255,250,220,0.55), transparent),
+              radial-gradient(1.5px 1.5px at 8% 80%, rgba(255,240,190,0.5), transparent),
+              radial-gradient(1px 1px at 28% 88%, rgba(255,250,230,0.5), transparent)
+            `,
+            animation: 'dustFloat 10s ease-in-out infinite',
+          }}
+        />
+        {/* Film grain texture - reduced intensity */}
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            mixBlendMode: 'overlay',
+          }}
+        />
+      </div>
+
+      {/* Right Side Dust Particles */}
+      <div
+        className="absolute right-0 top-0 bottom-0 w-[15%] pointer-events-none"
+        style={{ zIndex: 45 }}
+      >
+        {/* Dust specks layer */}
+        <div
+          className="absolute inset-0 opacity-25"
+          style={{
+            background: `
+              radial-gradient(1.5px 1.5px at 75% 20%, rgba(255,250,220,0.55), transparent),
+              radial-gradient(1px 1px at 90% 35%, rgba(255,240,200,0.5), transparent),
+              radial-gradient(1.5px 1.5px at 65% 48%, rgba(255,255,240,0.4), transparent),
+              radial-gradient(1px 1px at 85% 58%, rgba(255,245,210,0.55), transparent),
+              radial-gradient(1.5px 1.5px at 70% 70%, rgba(255,250,220,0.5), transparent),
+              radial-gradient(1px 1px at 95% 78%, rgba(255,240,190,0.55), transparent),
+              radial-gradient(1.5px 1.5px at 60% 85%, rgba(255,250,230,0.4), transparent)
+            `,
+            animation: 'dustFloat 9s ease-in-out infinite reverse',
+          }}
+        />
+        {/* Film grain texture - reduced intensity */}
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            mixBlendMode: 'overlay',
+          }}
+        />
+      </div>
+
+      {/* CSS Animation for floating dust */}
+      <style>{`
+        @keyframes dustFloat {
+          0%, 100% { transform: translateY(0) translateX(0); }
+          25% { transform: translateY(-3px) translateX(2px); }
+          50% { transform: translateY(-1px) translateX(-1px); }
+          75% { transform: translateY(2px) translateX(1px); }
+        }
+      `}</style>
+
+      {/* LEFT CURTAIN */}
       <div
         ref={leftCurtainRef}
-        className="absolute left-0 top-0 w-[55%] h-full"
-        style={{
-          background: 'linear-gradient(90deg, hsl(0, 65%, 12%) 0%, hsl(0, 70%, 18%) 100%)',
-          transformOrigin: 'left center',
-        }}
+        className="absolute left-0 top-0 w-[55%] h-full overflow-hidden"
+        style={{ transformOrigin: 'left center' }}
       >
-        {/* Individual curtain folds for physics effect */}
-        {[0, 1, 2, 3, 4].map((i) => (
-          <CurtainFold key={`left-${i}`} index={i} isLeft={true} isOpening={isOpening} delay={0.1} />
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(90deg, hsl(0, 68%, 11%) 0%, hsl(0, 72%, 16%) 100%)' }}
+        />
+
+        {Array.from({ length: numFolds }, (_, i) => (
+          <CurtainFold
+            key={`left-${i}`}
+            index={i}
+            totalFolds={numFolds}
+            isLeft={true}
+            isOpening={isOpening}
+            baseDelay={0.08}
+          />
         ))}
-        
-        {/* Base velvet texture */}
-        <div 
-          className="absolute inset-0 opacity-15"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          }}
-        />
-        
-        {/* Gold tassel fringe */}
-        <div 
-          className="absolute bottom-0 left-0 right-0 h-12"
-          style={{
-            background: 'linear-gradient(180deg, transparent 0%, hsl(40, 70%, 35%) 30%, hsl(35, 60%, 25%) 100%)',
-            clipPath: 'polygon(0 0, 3% 100%, 6% 0, 9% 100%, 12% 0, 15% 100%, 18% 0, 21% 100%, 24% 0, 27% 100%, 30% 0, 33% 100%, 36% 0, 39% 100%, 42% 0, 45% 100%, 48% 0, 51% 100%, 54% 0, 57% 100%, 60% 0, 63% 100%, 66% 0, 69% 100%, 72% 0, 75% 100%, 78% 0, 81% 100%, 84% 0, 87% 100%, 90% 0, 93% 100%, 96% 0, 100% 100%, 100% 0)',
-          }}
-        />
+
+        <GoldFringe isLeft={true} isOpening={isOpening} />
       </div>
 
-      {/* Right curtain with folds */}
+      {/* RIGHT CURTAIN */}
       <div
         ref={rightCurtainRef}
-        className="absolute right-0 top-0 w-[55%] h-full"
-        style={{
-          background: 'linear-gradient(270deg, hsl(0, 65%, 12%) 0%, hsl(0, 70%, 18%) 100%)',
-          transformOrigin: 'right center',
-        }}
+        className="absolute right-0 top-0 w-[55%] h-full overflow-hidden"
+        style={{ transformOrigin: 'right center' }}
       >
-        {[0, 1, 2, 3, 4].map((i) => (
-          <CurtainFold key={`right-${i}`} index={i} isLeft={false} isOpening={isOpening} delay={0.15} />
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(270deg, hsl(0, 68%, 11%) 0%, hsl(0, 72%, 16%) 100%)' }}
+        />
+
+        {Array.from({ length: numFolds }, (_, i) => (
+          <CurtainFold
+            key={`right-${i}`}
+            index={i}
+            totalFolds={numFolds}
+            isLeft={false}
+            isOpening={isOpening}
+            baseDelay={0.1}
+          />
         ))}
-        
-        <div 
-          className="absolute inset-0 opacity-15"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          }}
-        />
-        
-        <div 
-          className="absolute bottom-0 left-0 right-0 h-12"
-          style={{
-            background: 'linear-gradient(180deg, transparent 0%, hsl(40, 70%, 35%) 30%, hsl(35, 60%, 25%) 100%)',
-            clipPath: 'polygon(0 0, 3% 100%, 6% 0, 9% 100%, 12% 0, 15% 100%, 18% 0, 21% 100%, 24% 0, 27% 100%, 30% 0, 33% 100%, 36% 0, 39% 100%, 42% 0, 45% 100%, 48% 0, 51% 100%, 54% 0, 57% 100%, 60% 0, 63% 100%, 66% 0, 69% 100%, 72% 0, 75% 100%, 78% 0, 81% 100%, 84% 0, 87% 100%, 90% 0, 93% 100%, 96% 0, 100% 100%, 100% 0)',
-          }}
-        />
+
+        <GoldFringe isLeft={false} isOpening={isOpening} />
       </div>
 
-      {/* Top valance */}
-      <div 
-        className="absolute top-0 left-0 right-0 h-20 z-30"
+      {/* TOP VALANCE */}
+      <div
+        className="absolute top-0 left-0 right-0 z-50"
         style={{
-          background: 'linear-gradient(180deg, hsl(0, 60%, 14%) 0%, hsl(0, 55%, 12%) 100%)',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
+          height: '70px',
+          background: 'linear-gradient(180deg, hsl(0, 62%, 11%) 0%, hsl(0, 58%, 8%) 100%)',
+          boxShadow: '0 8px 35px rgba(0,0,0,0.75)',
         }}
       >
-        <div 
-          className="absolute bottom-0 left-0 right-0 h-6"
+        <div
+          className="absolute bottom-0 left-0 right-0 h-5"
           style={{
-            background: 'hsl(0, 55%, 11%)',
-            borderRadius: '0 0 50% 50% / 0 0 100% 100%',
-            transform: 'scaleX(1.1)',
+            background: 'hsl(0, 52%, 7%)',
+            clipPath: 'ellipse(50% 100% at 50% 0%)',
           }}
         />
-        {/* Gold rope */}
-        <div 
-          className="absolute bottom-3 left-1/2 -translate-x-1/2 w-40 h-1"
+        <div
+          className="absolute bottom-3 left-1/2 -translate-x-1/2 w-48 h-1 rounded-full"
           style={{
-            background: 'linear-gradient(90deg, transparent, hsl(45, 70%, 50%) 20%, hsl(45, 80%, 60%) 50%, hsl(45, 70%, 50%) 80%, transparent)',
-            borderRadius: '2px',
+            background: 'linear-gradient(90deg, transparent, #c9a54d 20%, #e8c06a 50%, #c9a54d 80%, transparent)',
+            boxShadow: '0 0 8px rgba(201, 165, 77, 0.3)',
           }}
         />
       </div>
 
-      {/* Enter button */}
+      {/* ENTER BUTTON */}
       {showEnterButton && (
         <div className="absolute inset-0 flex items-center justify-center z-40">
-          <div className="text-center px-8">
-            <h1 
-              className="font-cinema text-5xl md:text-7xl lg:text-8xl mb-6 tracking-[0.15em]"
+          <div className="text-center">
+            <h1
               style={{
-                color: 'hsl(45, 80%, 55%)',
-                textShadow: '0 0 60px hsla(45, 80%, 50%, 0.5), 0 4px 12px rgba(0,0,0,0.9)',
+                fontFamily: '"Playfair Display", serif',
+                fontSize: 'clamp(2.5rem, 7vw, 5rem)',
+                fontWeight: 700,
+                fontStyle: 'italic',
+                color: '#c9a54d',
+                textShadow: '0 0 50px rgba(201, 165, 77, 0.5), 0 4px 12px rgba(0,0,0,0.8)',
+                letterSpacing: '0.08em',
               }}
             >
-              CINEMA PORTFOLIO
+              Yash Gupta's Portfolio
             </h1>
-            <p 
-              className="font-film text-xl md:text-2xl mb-12 italic tracking-wide"
-              style={{ color: 'hsl(40, 35%, 75%)' }}
+            <p
+              className="mb-8 mt-2"
+              style={{
+                fontFamily: '"Cormorant Garamond", serif',
+                fontSize: 'clamp(1rem, 2.5vw, 1.5rem)',
+                fontStyle: 'italic',
+                color: '#a08060',
+              }}
             >
-              A Cinematic Experience Awaits
+              A Cinematic Experience
             </p>
-            <button onClick={startOpening} className="cinema-btn">
-              Enter Theater
+            <button
+              onClick={startOpening}
+              className="px-10 py-4 uppercase tracking-[0.2em] transition-all hover:brightness-110 hover:scale-105"
+              style={{
+                fontFamily: '"Playfair Display", serif',
+                fontSize: '1.1rem',
+                fontWeight: 700,
+                background: 'linear-gradient(180deg, #d4af37 0%, #c9a54d 30%, #8b6528 70%, #6a4a1a 100%)',
+                border: '3px solid #e8c06a',
+                color: '#1a0c06',
+                borderRadius: '4px',
+                boxShadow: '0 0 30px rgba(201, 165, 77, 0.5), 0 4px 15px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3)',
+                textShadow: '0 1px 1px rgba(255,255,255,0.3)',
+              }}
+            >
+              ★ Enter Theater ★
             </button>
           </div>
         </div>
       )}
 
-      {/* Countdown */}
       {showCountdown && <FilmCountdown onComplete={handleCountdownComplete} />}
     </div>
   );

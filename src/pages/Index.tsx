@@ -5,7 +5,7 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>Cinema Portfolio | A Cinematic Digital Experience</title>
+        <title>Yash Gupta's Portfolio | A Cinematic Digital Experience</title>
         <meta name="description" content="Step into a vintage cinema theater and explore an immersive portfolio experience. Watch the curtains unfold and discover creative work presented as movie reels." />
       </Helmet>
       <CinemaPortfolio />
